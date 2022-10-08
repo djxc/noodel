@@ -1,20 +1,46 @@
-use std::borrow::Cow;
+use super::threadPool::ThreadPool;
+use crate::conf::index_conf;
 /**
  * 通过tcp启动服务器，实现mqtt协议
  */
+use std::borrow::Cow;
 use std::fs;
+use std::sync::Arc;
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
 };
+use std::{thread, time::Duration};
 
-pub fn create_server() {
-    let listener = TcpListener::bind("localhost:8081").unwrap();
-    for stream in listener.incoming() {
-        let _stream = stream.unwrap();
-        hander_connect(_stream);
-        println!("Connection established!")
-    }
+pub fn create_server(thead_num: usize) {
+    // 堵塞请求 - 每秒处理请求为上限在90左右，每个请求用时为218ms    
+    let port = index_conf::CONF_MAP.get("mqtt_port").unwrap();
+    let listener = TcpListener::bind(format!("localhost:{}", port)).unwrap();
+    let ls = Arc::new(listener);
+    println!("server is running at :{}", port);
+    let ls1 = ls.clone();
+    // 需要创一个线程用来接收新客户端的连接
+    thread::spawn(move || {
+        let thread_pool = ThreadPool::new(thead_num);
+        for stream in ls1.incoming() {
+            let _stream = stream.unwrap();
+            thread_pool.execute(|| {
+                hander_connect(_stream);
+            });
+        }
+    });
+
+    // loop {
+    //     let (stream, addr) = match ls.accept() {
+    //         Ok((s, r)) => (s, r),
+    //         Err(e) => {
+    //             continue;
+    //         }
+    //     };
+    //     hander_connect(stream);
+    //     println!("new connect")
+    // }
+    
 }
 
 /**
@@ -30,7 +56,9 @@ fn hander_connect(mut stream: TcpStream) {
     stream.read(&mut buffer).unwrap();
     let request = String::from_utf8_lossy(&buffer[..]);
     parse_request(request);
-    let content = read_html_file("d:\\index.html");
+    // let content = read_html_file("d:\\index.html");
+    thread::sleep(Duration::from_millis(10));
+    let content = "hello";
     let response_str = format!(
         "{}\r\nContent-Length:{}\r\n\r\n{}",
         OK_REPONSE_HEADER,
@@ -51,7 +79,7 @@ fn parse_request(request_str: Cow<str>) {
             continue;
         }
         if i == 0 {
-            println!("header: {}", record)
+            // println!("header: {}", record)
         } else {
             let value = record.replace("\t", "");
             if value.trim().len() == 0 {
@@ -61,7 +89,7 @@ fn parse_request(request_str: Cow<str>) {
             if tmp_header_item[0].len() > 200 {
                 println!("too long: {}", tmp_header_item[0])
             }
-            println!("{} - {}", tmp_header_item[0], tmp_header_item[1]);
+            // println!("{} - {}", tmp_header_item[0], tmp_header_item[1]);
         }
     }
 }
