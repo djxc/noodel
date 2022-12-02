@@ -1,17 +1,24 @@
 mod mqtt;
+mod util;
 mod conf;
+mod DGIS;
 use std::{process::exit};
 
 use mqtt::mq_server;
 use mqtt::mq_client;
+use util::image_util;
+use DGIS::SpatialEntity::DPoint;
 // use async_std::prelude::*;
 
 // #[async_std::main]
 // async
 fn main() {
-    greet_world();
-    parse_str();
-    parse_args();
+    image_util::list_files("E:\\code\\rust");
+    let point = DPoint::DPoint {x : 10.0, y: 20.0};
+    point.show();
+    // greet_world();
+    // parse_str();
+    // parse_args();
 }
 
 /**
