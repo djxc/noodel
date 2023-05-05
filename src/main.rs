@@ -1,6 +1,7 @@
 mod mqtt;
 mod conf;
 mod study;
+mod vulkan_CV;
 
 use std::net::TcpStream;
 use std::{process::exit};
