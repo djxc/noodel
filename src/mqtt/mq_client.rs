@@ -16,6 +16,55 @@ extern crate futures;
 // use futures::Future;
 // use futures_mio::Loop;
 
+pub trait Client {
+    fn connect(&mut self, url: &str);
+    fn send_msg(&mut self, msg: &str);
+    fn close(&self);
+}
+
+pub struct MqttClient {
+    pub stream: TcpStream
+}
+
+impl Client for MqttClient {
+    fn connect(&mut self, url: &str) {
+        let client_result = TcpStream::connect(url);
+        let stream = match client_result {
+            Ok(stream) => stream,
+            Err(error) => {
+                panic!("connect mqtt broker error:{}", error)
+            }
+        };
+        self.stream = stream;
+    }
+
+    fn send_msg(&mut self, msg: &str) {
+        match self.stream.write(msg.as_bytes()) {
+            Ok(result) => {
+                println!("send msg result:{result}")
+            },
+            Err(e) => {
+                println!("send msg error:{e}")
+            }
+        };
+    }
+
+    fn close(&self) {
+        todo!()
+    }
+}
+
+pub fn connect_broker(url: &str) -> TcpStream {
+    let client_result = TcpStream::connect(url);
+    let stream = match client_result {
+        Ok(stream) => stream,
+        Err(error) => {
+            panic!("connect mqtt broker error:{}", error)
+        }
+    };
+    return stream;
+}
+
 pub fn create_client() {
     // let mut lp = Loop::new().unwrap();
     // let addr = "127.0.0.1:8080".parse::<SocketAddr>().unwrap();
