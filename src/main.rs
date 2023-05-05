@@ -1,17 +1,19 @@
 mod mqtt;
+mod util;
 mod conf;
 mod study;
 mod vulkan_CV;
 
 use std::net::TcpStream;
+mod DGIS;
 use std::{process::exit};
 
 use mqtt::mq_server;
 use mqtt::mq_client;
 use study::base_study;
 
-use crate::mqtt::mq_client::Client;
-use crate::mqtt::mq_server::Server;
+use util::image_util;
+use DGIS::SpatialEntity::DPoint;
 // use async_std::prelude::*;
 
 // #[async_std::main]
