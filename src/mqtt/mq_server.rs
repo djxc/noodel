@@ -58,7 +58,8 @@ impl Server for MqttBroker {
             }
         };
         let listener_cy = listener.try_clone().unwrap();
-        thread::spawn(move|| {     
+
+        // thread::spawn(move|| {     
             for stream_result in listener.incoming() {
                 let stream = match stream_result {
                     Ok(stream) => stream,
@@ -69,19 +70,19 @@ impl Server for MqttBroker {
                 // self.request(stream);
                 println!("{}", stream.peer_addr().unwrap());
             }     
-        });
+        // });
 
-        loop {
-            let client_connect = listener_cy.accept();
-            match client_connect {
-                Ok((socket, addr)) => {
-                    println!("client addr: {} connectd", addr);
-                },
-                Err(error) => {
-                    panic!("connect error:{}", error)
-                }
-            }
-        }
+        // loop {
+        //     let client_connect = listener_cy.accept();
+        //     match client_connect {
+        //         Ok((socket, addr)) => {
+        //             println!("client addr: {} connectd", addr);
+        //         },
+        //         Err(error) => {
+        //             panic!("connect error:{}", error)
+        //         }
+        //     }
+        // }
 
         
         return true;

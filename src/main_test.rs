@@ -31,39 +31,9 @@ use mqtt::mq_server::create_server;
 use vulkan_CV::GeometryEntity::{Vertex, DrawPoint};
 
 
-fn main() {
-    // 通过标准库中的env args获取程序参数，第一个参数为程序可执行文件
-    // 例如：Args { inner: ["target\\debug\\noodel.exe", "res"] }
-    let params = std::env::args();
-    println!("{:?}, params length {}", params, params.len());
-    let mut arguments:Vec<String> = Vec::new();
-    for argument in params {
-        arguments.push(argument);
-    }
-    println!("{}", arguments.len());
-    if arguments.len() > 0{
-        if arguments[1] == "-h" {
-            println!("help")
-        }
-    }
-    println!("\x1b[0;31mHello, world!\x1b[0m");
-    // let point1 = DGIS::SpatialEntity::VectorEntity::Point{x:2.0, y:4.0};
-    // let point2 = DGIS::SpatialEntity::VectorEntity::Point{x:1.0, y:3.0};
-    // let point3 = DGIS::SpatialEntity::VectorEntity::Point{x:1.0, y:2.0};
-    // let line =  DGIS::SpatialEntity::VectorEntity::Line{points:vec![point1, point2]};
-    // line.show();
-    // let isInLine = point3.inLine(line);
-    // if isInLine {
-    //     println!("point in line");
-    // }else {
-    //     println!("point not in line");
-    // }
-    // point1.show();
-    // println!("points product is {}", point1.product(point2));
+fn main() {   
     // test_vulkan();
     triangle();
-    // let pattern = std::env::args().nth(1).expect("no pattern given");
-    // let path = std::env::args().nth(2).expect("no path given");
 }
 
 fn test_vulkan() {
