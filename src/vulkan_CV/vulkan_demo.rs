@@ -25,11 +25,50 @@ use vulkano::device::physical::{PhysicalDevice, PhysicalDeviceType};
 use vulkano::instance::{Instance, InstanceCreateInfo};
 use vulkano::memory::allocator::{StandardMemoryAllocator, AllocationCreateInfo, MemoryUsage};
 use vulkano_win::VkSurfaceBuild;
-use winit::event::{Event, WindowEvent};
+use winit::event::{Event, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode};
 use winit::event_loop::{EventLoop, ControlFlow};
-use winit::window::{WindowBuilder, Window};
+use winit::window::{WindowBuilder, Window, CursorIcon};
 use vulkano::device::DeviceExtensions;
 
+
+use crate::conf::{index_conf, self};
+
+const CURSORS: &[CursorIcon] = &[
+    CursorIcon::Default,
+    CursorIcon::Crosshair,
+    // CursorIcon::Pointer,
+    CursorIcon::Move,
+    CursorIcon::Text,
+    CursorIcon::Wait,
+    CursorIcon::Help,
+    CursorIcon::Progress,
+    CursorIcon::NotAllowed,
+    CursorIcon::ContextMenu,
+    CursorIcon::Cell,
+    CursorIcon::VerticalText,
+    CursorIcon::Alias,
+    CursorIcon::Copy,
+    CursorIcon::NoDrop,
+    CursorIcon::Grab,
+    CursorIcon::Grabbing,
+    CursorIcon::AllScroll,
+    CursorIcon::ZoomIn,
+    CursorIcon::ZoomOut,
+    CursorIcon::EResize,
+    CursorIcon::NResize,
+    CursorIcon::NeResize,
+    CursorIcon::NwResize,
+    CursorIcon::SResize,
+    CursorIcon::SeResize,
+    CursorIcon::SwResize,
+    CursorIcon::WResize,
+    CursorIcon::EwResize,
+    CursorIcon::NsResize,
+    CursorIcon::NeswResize,
+    CursorIcon::NwseResize,
+    CursorIcon::ColResize,
+    CursorIcon::RowResize,
+];
 
 #[derive(BufferContents, Vertex)]
 #[repr(C)]
@@ -141,6 +180,21 @@ fn create_instance() -> Arc<Instance> {
     let library = VulkanLibrary::new().expect("no local Vulkan library/DLL");
     let instance = Instance::new(library, InstanceCreateInfo::default())
         .expect("failed to create instance");
+    return instance;
+}
+
+/// 创建带有win扩展的实例
+fn create_win_instance() -> Arc<Instance> {
+    let library = VulkanLibrary::new().expect("no local Vulkan library/DLL");
+    let required_extensions = vulkano_win::required_extensions(&library);
+    let instance = Instance::new(
+        library,
+        InstanceCreateInfo {
+            enabled_extensions: required_extensions,
+            ..Default::default()
+        },
+    )
+    .expect("failed to create instance");
     return instance;
 }
 
@@ -624,30 +678,27 @@ pub fn test_vulkan_window() {
     });
 }
 
+/// 通过win窗口显示vulkan渲染结果
+/// 
+/// 1、首先创建带有win扩展的实例
+/// 2、创建窗口，以及事件循环 
+pub fn window_vulkan() {    
+    let instance = create_win_instance();
 
-pub fn window_vulkan() {
-    let library = VulkanLibrary::new().expect("no local Vulkan library/DLL");
-    let required_extensions = vulkano_win::required_extensions(&library);
-    let instance = Instance::new(
-        library,
-        InstanceCreateInfo {
-            enabled_extensions: required_extensions,
-            ..Default::default()
-        },
-    )
-    .expect("failed to create instance");
     let event_loop = EventLoop::new();
+
     let window_builder = WindowBuilder::new();
     let surface = window_builder
         .build_vk_surface(&event_loop, instance.clone())
         .unwrap();
+
     let window = surface 
         .object() 
         .unwrap() 
         .clone() 
         .downcast::<Window>() 
         .unwrap(); 
-    window.set_title("djxc");
+    window.set_title(index_conf::CONF_MAP.get("winit_name").unwrap());
 
     let device_extensions = DeviceExtensions {
         khr_swapchain: true,
@@ -759,6 +810,8 @@ pub fn window_vulkan() {
     let frames_in_flight = images.len();
     let mut fences: Vec<Option<Arc<FenceSignalFuture<_>>>> = vec![None; frames_in_flight];
     let mut previous_fence_i = 0;
+    let mut cursor_idx = 0;
+    
     event_loop.run(move|event, _, control_flow| {
         match event {
             Event::WindowEvent {
@@ -767,8 +820,86 @@ pub fn window_vulkan() {
             } => {
                 *control_flow = ControlFlow::Exit;
             },
+            // 键盘按下事件
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: _virtual_key_code,
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                let virtual_keycode = _virtual_key_code.unwrap();
+                match virtual_keycode {
+                    // A 修改鼠标样式
+                    VirtualKeyCode::A => {
+                        println!("{:?}", _virtual_key_code.unwrap());
+                        cursor_idx = change_window_cursors(cursor_idx);
+                        window.set_cursor_icon(CURSORS[cursor_idx]);                                                
+                    },
+                    // B 修改绘制几何
+                    VirtualKeyCode::B => {
+                        // 1、首先创建swapchain交换链
+                        // 2、创建帧缓存
+                        // 3、几何数据准备
+                        // 4、根据几何数据创建顶点缓冲区
+                        // 5、创建图形管道
+                        // 6、创建命令缓冲区
+                        // 最后图形的绘制在winitclear事件中，异步执行命令
+                        let (new_swapchain, new_images) = swapchain.recreate(SwapchainCreateInfo {
+                            image_extent: window.inner_size().into(),
+                            ..swapchain.create_info()
+                        }).unwrap();
+                        swapchain = new_swapchain;
+                        let new_framebuffers = get_framebuffers(&new_images, &render_pass.clone());
+
+                        let vertex1 = MyVertex {
+                            position: [0.5, 0.5],
+                        };
+                        let vertex2 = MyVertex {
+                            position: [0.0, 0.5],
+                        };
+                        let vertex3 = MyVertex {
+                            position: [0.5, -0.25],
+                        };
+
+                        let vertex_buffer = Buffer::from_iter(
+                            &memory_allocator,
+                            BufferCreateInfo {
+                                usage: BufferUsage::VERTEX_BUFFER,
+                                ..Default::default()
+                            },
+                            AllocationCreateInfo {
+                                usage: MemoryUsage::Upload,
+                                ..Default::default()
+                            },
+                            vec![vertex1, vertex2, vertex3],
+                        )
+                        .unwrap();
+                        let new_pipeline = get_pipeline(
+                            device.clone(),
+                            vs.clone(),
+                            fs.clone(),
+                            render_pass.clone(),
+                            viewport.clone(),
+                        );
+                        command_buffers = get_command_buffers(
+                            &device,
+                            &queue,
+                            &new_pipeline,
+                            &new_framebuffers,
+                            &vertex_buffer,
+                        );
+                    },
+                    _ => {}
+                }
+            },
             Event::MainEventsCleared => {
-                // println!("window clear!")
                 if window_resized || recreate_swapchain {
                     recreate_swapchain = false;
     
@@ -848,7 +979,9 @@ pub fn window_vulkan() {
                     .then_signal_fence_and_flush();
     
                 fences[image_i as usize] = match future {
-                    Ok(value) => Some(Arc::new(value)),
+                    Ok(value) => {
+                        Some(Arc::new(value))
+                    },
                     Err(FlushError::OutOfDate) => {
                         recreate_swapchain = true;
                         None
@@ -866,6 +999,22 @@ pub fn window_vulkan() {
     });
 
   
+}
+
+
+/// 修改鼠标样式
+/// 
+/// @params cursor_idx 鼠标样式索引  
+/// 
+/// @return 返回新的鼠标索引
+fn change_window_cursors(mut cursor_idx: usize) -> usize {
+    println!("Setting cursor to \"{:?}\"", CURSORS[cursor_idx]);
+    if cursor_idx < CURSORS.len() - 1 {
+        cursor_idx += 1;
+    } else {
+        cursor_idx = 0;
+    }
+    return cursor_idx;
 }
 
 fn get_command_buffers(
@@ -929,6 +1078,7 @@ fn get_pipeline(
         .unwrap()
 }
 
+/// 创建帧缓存
 fn get_framebuffers(
     images: &[Arc<SwapchainImage>],
     render_pass: &Arc<RenderPass>,
