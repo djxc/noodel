@@ -18,8 +18,14 @@
 
 
 ## DGIS开发
+GIS系统开发基于WebGPU进行渲染，GDAL以及geos进行栅格和矢量操作。
 - 1、（todo）基本几何对象的显示，点线面。点线面简单几何的定义。
 - 2、（todo）几何算法开发，相交、缓冲等。
 
 
 ## mqtt开发
+
+
+## WebGPU
+webGPU是一套基于浏览器的图形API，浏览器封装了现代图形API（Dx12、Vulkan、Metal），提供给Web 3D程序员，为 Web释放了更多的GPU 硬件的功能。wgpu作为rust库可以通过rust开发WebGPU程序,wgpu在桌面端采用的是Vulkan、metal以及driectX 12或者OpenGL ES，在浏览器端采用的WebGPU或WebGL2.因此通过rust开发wgpu程序即可在桌面端运行也可通过打包为webassembly在浏览器端运行。
+- 1、buffer，是GPU中的二进制数据，buffer是内存中存储连续的。buffer通常用来存储结构体以及数组。WebGPU中常用的buffer为顶点buffer以及index buffer。

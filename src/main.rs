@@ -4,6 +4,7 @@ mod conf;
 mod study;
 mod DGIS;
 mod vulkan_CV;
+mod webgpu;
 
 use std::net::TcpStream;
 use std::{process::exit};
@@ -18,6 +19,7 @@ use util::image_util;
 use DGIS::SpatialEntity::DPoint;
 use vulkan_CV::vulkan_demo;
 use vulkan_CV::vulkano_demo;
+use webgpu::win_wgpu;
 
 
 // use async_std::prelude::*;
@@ -42,6 +44,7 @@ fn parse_args() {
         1、run as server: cargo run agent=server
         2、run as client: cargo run agent=client
         3、run as dGIS: cargo run agent=dGIS
+        4、run as wgpu: cargo run agent=wgpu
         ");
         exit(-1);
     }
@@ -73,6 +76,9 @@ fn parse_args() {
                             vulkan_demo::window_vulkan();
                             // vulkano_demo::vulkan_demo_test();
                         },
+                        "wgpu" => {
+                            pollster::block_on(win_wgpu::init_win());
+                        }
                         _ => println!("not find args")
                     }
                 }
